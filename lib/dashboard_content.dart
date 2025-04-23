@@ -64,7 +64,7 @@ class _MonitoringPageState extends State<DashboardContent> {
           if (_moistureData.length > 20) _moistureData.removeAt(0);
         });
 
-        _handleAutoPumpControl(); // <-- Fungsi kawalan auto akan dipanggil
+        _handleAutoPumpControl();
       }
     });
 
@@ -87,20 +87,22 @@ class _MonitoringPageState extends State<DashboardContent> {
     });
   }
 
-  // 🎯 Fungsi Kawalan Pam Berdasarkan Auto Mode + Threshold
+  // ✅ Fungsi Kawalan Auto Pam Berdasarkan Threshold
   void _handleAutoPumpControl() {
     if (_isAutoMode) {
-      if (!_pumpStatus && _soilMoisture < 30) {
-        _dbRef.child('Actuator/pump').set(0);
-      } else if (_pumpStatus && _soilMoisture > 60) {
-        _dbRef.child('Actuator/pump').set(1);
+      if (_soilMoisture < 30 && !_pumpStatus) {
+        _dbRef.child('Actuator/pump').set(1); // Hidupkan pam
+        print("Auto: Pam hidup sebab moisture $_soilMoisture < 30");
+      } else if (_soilMoisture > 60 && _pumpStatus) {
+        _dbRef.child('Actuator/pump').set(0); // Matikan pam
+        print("Auto: Pam mati sebab moisture $_soilMoisture > 60");
       }
     }
   }
 
   void _togglePump(bool status) {
     if (!_isAutoMode) {
-      _dbRef.child('Actuator/pump').set(status ? 1 : 0);
+      _dbRef.child('Actuator/pump').set(status ? 0 : 1);
     }
   }
 
@@ -121,13 +123,12 @@ class _MonitoringPageState extends State<DashboardContent> {
               ),
             ),
           ),
-          SizedBox(height: 20,),
+          const SizedBox(height: 20),
           Text(
             'Welcome, ${widget.userName}!',
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-
           Card(
             child: Column(
               children: [
@@ -168,7 +169,6 @@ class _MonitoringPageState extends State<DashboardContent> {
             ),
           ),
           const SizedBox(height: 16),
-
           Row(
             children: [
               _buildStatusCard('Temperature', '${_temperature.toStringAsFixed(1)}°C', Icons.thermostat, Colors.red),
@@ -199,7 +199,6 @@ class _MonitoringPageState extends State<DashboardContent> {
             ],
           ),
           const SizedBox(height: 16),
-
           const Text('Sensor Data History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           _buildSensorChart('Temperature (°C)', _tempData, Colors.red),
